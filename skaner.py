@@ -1,79 +1,44 @@
 import re
 
-class Token:
-    def __init__(self, kod, wartosc, kolumna):
-        self.kod = kod
-        self.wartosc = wartosc
-        self.kolumna = kolumna
-
-    def __str__(self):
-        return f"({self.kod:8}, '{self.wartosc}')"
-
-
 class AnalizatorLeksykalny:
     def __init__(self, tekst):
         self.tekst = tekst
-        self.pozycja = 0  
-        
+        self.pozycja = 0
         self.reguly = [
-            ('NUMBER', r'\d+'),                           # Liczba całkowita
-            ('ID',     r'[a-zA-Z_][a-zA-Z0-9_]*'),        # Identyfikator
-            ('PLUS',   r'\+'),                            # Działanie: dodawanie
-            ('MINUS',  r'-'),                             # Działanie: odejmowanie
-            ('MUL',    r'\*'),                            # Działanie: mnożenie
-            ('DIV',    r'/'),                             # Działanie: dzielenie
-            ('LPAREN', r'\('),                            # Nawias okrągły lewy
-            ('RPAREN', r'\)'),                            # Nawias okrągły prawy
-            ('SPACE',  r'[ \t\n\r]+')                     # Białe znaki
+            ('NUMBER', r'\d+'),
+            ('ID', r'[a-zA-Z_][a-zA-Z0-9_]*'),
+            ('PLUS', r'\+'),
+            ('MINUS', r'-'),
+            ('MUL', r'\*'),
+            ('DIV', r'/'),
+            ('LPAREN', r'\('),
+            ('RPAREN', r'\)'),
+            ('SPACE', r'[ \t\n\r]+')
         ]
-        
-        czesci_regex = [f'(?P<{nazwa}>{wzorzec})' for nazwa, wzorzec in self.reguly]
-        self.master_regex = re.compile('|'.join(czesci_regex))
 
     def skaner(self):
-        """Główna funkcja skanująca, zwracająca następny poprawny token."""
         while self.pozycja < len(self.tekst):
-            dopasowanie = self.master_regex.match(self.tekst, self.pozycja)
-            
-            if dopasowanie:
-                typ_tokena = dopasowanie.lastgroup
-                wartosc = dopasowanie.group(typ_tokena)
-                kolumna = self.pozycja + 1 
-                
-                self.pozycja = dopasowanie.end()
-                
-                if typ_tokena == 'SPACE':
-                    continue
-                    
-                return Token(typ_tokena, wartosc, kolumna)
+            for nazwa, wzorzec in self.reguly:
+                regex = re.compile(wzorzec)
+                dopasowanie = regex.match(self.tekst, self.pozycja)
+                if dopasowanie:
+                    wartosc = dopasowanie.group(0)
+                    kolumna = self.pozycja + 1
+                    self.pozycja = dopasowanie.end()
+                    if nazwa == 'SPACE':
+                        break
+                    return (nazwa, wartosc, kolumna)
             else:
-                bledny_znak = self.tekst[self.pozycja]
-                kolumna_bledu = self.pozycja + 1
-                raise RuntimeError(
-                    f"BŁĄD SKANERA: Nierozpoznany symbol '{bledny_znak}' "
-                    f"w kolumnie {kolumna_bledu}."
-                )
-        
+                raise RuntimeError(f"Błąd w kolumnie {self.pozycja + 1}")
         return None
 
 
-# TEST SKANERA
 if __name__ == '__main__':
-    wyrazenie = "2+3*(76+8/3)+ 3*(9-3) + zmienna ^ 2"
-    
-    print(f"Skanowane wyrażenie: {wyrazenie}")
-    print("-" * 50)
-    
-    skaner_obj = AnalizatorLeksykalny(wyrazenie)
-    
-    try:
-        while True:
-            token = skaner_obj.skaner()
-            if token is None:
-                break
-            
-            print(f"{token}  [Znaleziono w kol. {token.kolumna}]")
-            
-    except RuntimeError as e:
-        print("-" * 50)
-        print(e)
+    wyrazenie = "2+3*(76+8/3)+ 3*(9-3) + zmienna"
+    skaner = AnalizatorLeksykalny(wyrazenie)
+
+    while True:
+        token = skaner.skaner()
+        if token is None:
+            break
+        print(token)
