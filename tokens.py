@@ -13,6 +13,7 @@ RULES = [
     ('RPAREN', r'\)'),
     ('LBRACE', r'\{'),
     ('RBRACE', r'\}'),
+    ('COLON', r':'),
     ('SPACE', r'[ \t\n\r]+')
 ]
 
@@ -29,5 +30,6 @@ COLORS = {
     'RPAREN': '#FFD700',
     'LBRACE': '#DA70D6',
     'RBRACE': '#DA70D6',
+    'COLON': '#D4D4D4',
     'SPACE': None 
 }
